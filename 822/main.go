@@ -1,52 +1,64 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
-/**
-3133. 数组最后一个元素的最小值
-
-题目：
-给你两个整数 n 和 x 。你需要构造一个长度为 n 的 正整数 数组 nums ，
-对于所有 0 <= i < n - 1 ，满足 nums[i + 1] 大于 nums[i] ，
-并且数组 nums 中所有元素的按位 AND 运算结果为 x 。
-返回 nums[n - 1] 可能的 最小 值。
-
-示例：
-输入：n = 3, x = 4
-输出：6
-解释：数组 nums 可以是 [4,5,6] ，最后一个元素为 6 。
-
-解题思想：
-思路
-考虑 x 的二进制，全部与完是 x 也就意味着所有的数字在 x 的二进制为 1 的位置也必须是 1
-那么显然第一个数字即最小值肯定填 x，x 的二进制为 0 的部分（包括前导零）即为可以剩下的我们可以填数字的空位。
-那么剩下 n-1 个数想要最大的值最小，只能是按照顺序依次将 0～n-1 的二进制填入 x 二进制的“空位”中，最大的那个数就是将 n-1 的二进制填入 x 的“空位”
-解题过程
-我们对 x 的所有空位进行循环遍历，从最低位开始遍历
-我们取 a = n - 1，每次循环的过程中都拿出 a 的最低位的值，循环结束前 a 的值赋为 a 右移一位，当 a 为 0 时说明已经把所有位都放入 x 的空位中了，就可以跳出循环了（代码中的64是考虑了 long long 的位数，完全可以替换成死循环，或者循环条件替换成 a != 0）
-在每次循环的过程中，看下当前是不是空位，只在当前是空位时将 a 的最低位放在空位里
-复杂度
-时间复杂度: 𝑂(𝑙𝑜𝑔𝑛)
-空间复杂度: 𝑂(1)
-
-*/
-
-func minEnd(n, x int) int64 {
-	n--
-	i, j := 0, 0
-	for n>>j > 0 {
-		if x>>i&1 == 0 {
-			x |= n >> j & 1 << i
-			j++
-		}
-		i++
+func validArrangement(pairs [][]int) [][]int {
+	graph := make(map[int][]int)
+	degrees := make(map[int]int)
+	for _, pair := range pairs {
+		graph[pair[0]] = []int{}
+		graph[pair[1]] = []int{}
+		degrees[pair[0]] = 0
+		degrees[pair[1]] = 0
 	}
-	return int64(x)
+	for _, pair := range pairs {
+		graph[pair[0]] = append(graph[pair[0]], pair[1])
+		degrees[pair[0]]++
+		degrees[pair[1]]--
+	}
+	from := pairs[0][0]
+	for cur, degree := range degrees {
+		if degree == 1 {
+			from = cur
+			break
+		}
+	}
+	record := [][]int{}
+	dfs(from, graph, &record)
+	n := len(record)
+	ans := make([][]int, n)
+	for i, j := n-1, 0; j < n; i, j = i-1, j+1 {
+		ans[i] = record[j]
+	}
+	return ans
+}
+
+func dfs(from int, graph map[int][]int, record *[][]int) {
+
+	next := graph[from]
+
+	for len(next) > 0 {
+
+		to := next[0]
+
+		next = next[1:]
+
+		dfs(to, graph, record)
+
+		*record = append(*record, []int{from, to})
+
+	}
+
 }
 
 func main() {
-	n := 3
-	x := 4
-	minEnd(n, x)
-	fmt.Print(minEnd(n, x))
+
+	pairs := [][]int{{5, 1}, {4, 5}, {11, 9}, {9, 4}}
+
+	result := validArrangement(pairs)
+
+	fmt.Println(result)
+
 }
